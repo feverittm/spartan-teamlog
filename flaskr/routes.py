@@ -50,21 +50,93 @@ def index():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Spartan Teamlog</title>
+        <title>Spartan Teamlog - Dashboard</title>
         <style>
-            body {{ font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
-            th {{ background-color: #f2f2f2; font-weight: bold; }}
-            tr:hover {{ background-color: #f5f5f5; }}
-            .summary {{ background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }}
+            
+            /* Titlebar Styles */
+            .titlebar {{ 
+                background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
+                color: white; 
+                padding: 15px 0; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }}
+            .titlebar-content {{ 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;
+                padding: 0 20px;
+            }}
+            .titlebar-left {{ display: flex; align-items: center; }}
+            .titlebar-logo {{ height: 40px; width: auto; margin-right: 15px; }}
+            .titlebar-title {{ font-size: 20px; font-weight: 600; }}
+            .titlebar-subtitle {{ font-size: 14px; opacity: 0.9; margin-left: 10px; }}
+            .titlebar-right {{ display: flex; align-items: center; gap: 20px; }}
+            .live-status {{ 
+                background: rgba(255,255,255,0.2); 
+                padding: 5px 12px; 
+                border-radius: 15px; 
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }}
+            .status-dot {{ 
+                width: 8px; 
+                height: 8px; 
+                background: #00ff00; 
+                border-radius: 50%; 
+                animation: pulse 2s infinite;
+            }}
+            @keyframes pulse {{
+                0% {{ opacity: 1; }}
+                50% {{ opacity: 0.5; }}
+                100% {{ opacity: 1; }}
+            }}
+            
+            /* Main Content */
+            .main-content {{ max-width: 1200px; margin: 0 auto; padding: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #eee; }}
+            th {{ background-color: #f8f9fa; font-weight: 600; color: #495057; }}
+            tr:hover {{ background-color: #f8f9fa; }}
+            .summary {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
             .nav-links {{ margin: 20px 0; }}
-            .nav-links a {{ margin-right: 15px; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }}
-            .nav-links a:hover {{ background: #0056b3; }}
+            .nav-links a {{ margin-right: 15px; padding: 10px 20px; background: #dc143c; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }}
+            .nav-links a:hover {{ background: #8b0000; }}
         </style>
     </head>
     <body>
-        <h1>🏛️ Spartan Teamlog</h1>
+        <!-- Titlebar -->
+        <div class="titlebar">
+            <div class="titlebar-content">
+                <div class="titlebar-left">
+                    <img src="/static/images/997_logo.png" alt="997 Logo" class="titlebar-logo">
+                    <div>
+                        <div class="titlebar-title">Spartan Teamlog</div>
+                        <div class="titlebar-subtitle">Team Attendance Management</div>
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                    <div class="live-status">
+                        <div class="status-dot"></div>
+                        Live Dashboard
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        {checked_in_count}/{total_active} Present
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
         
         <div class="summary">
             <h2>📊 Attendance Summary</h2>
@@ -89,11 +161,12 @@ def index():
             </tbody>
         </table>
         
-        <div class="nav-links">
-            <a href="/members">👤 Manage Members</a>
-            <a href="/positions">🏷️ Manage Positions</a>
-            <a href="/api/members">📡 Members API</a>
-            <a href="/api/positions">📡 Positions API</a>
+            <div class="nav-links">
+                <a href="/members">👤 Manage Members</a>
+                <a href="/positions">🏷️ Manage Positions</a>
+                <a href="/api/members">📡 Members API</a>
+                <a href="/api/positions">📡 Positions API</a>
+            </div>
         </div>
     </body>
     </html>
