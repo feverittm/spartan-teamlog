@@ -1,7 +1,7 @@
 """Routes for the Spartan Teamlog application."""
 
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
-from .models import Member
+from .models import Member, Position
 from .db import db
 
 # Create blueprint
@@ -91,7 +91,9 @@ def index():
         
         <div class="nav-links">
             <a href="/members">👤 Manage Members</a>
-            <a href="/api/members">📡 API</a>
+            <a href="/positions">🏷️ Manage Positions</a>
+            <a href="/api/members">📡 Members API</a>
+            <a href="/api/positions">📡 Positions API</a>
         </div>
     </body>
     </html>
@@ -102,6 +104,7 @@ def index():
 def list_members():
     """List all members with check-in/out actions."""
     members = Member.query.all()
+    positions = Position.query.all()
     
     member_list = []
     for member in members:
@@ -138,11 +141,18 @@ def list_members():
     </table>
     
     <h3>Add New Member</h3>
-    <form method="POST" action="/members/add">
-        <input type="text" name="first_name" placeholder="First Name" required>
-        <input type="text" name="last_name" placeholder="Last Name" required>
-        <input type="text" name="position" placeholder="Position">
-        <button type="submit">Add Member</button>
+    <form method="POST" action="/members/add" style="margin-top: 20px;">
+        <div style="margin-bottom: 10px;">
+            <input type="text" name="first_name" placeholder="First Name" required style="padding: 5px; margin-right: 10px;">
+            <input type="text" name="last_name" placeholder="Last Name" required style="padding: 5px; margin-right: 10px;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <select name="position_id" style="padding: 5px; margin-right: 10px;">
+                <option value="">Select Position (Optional)</option>
+                {''.join([f'<option value="{pos.id}">{pos.name.title()}</option>' for pos in positions])}
+            </select>
+            <button type="submit" style="padding: 5px 15px; background: #28a745; color: white; border: none; border-radius: 3px;">Add Member</button>
+        </div>
     </form>
     """
 
@@ -152,13 +162,13 @@ def add_member():
     """Add a new member."""
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
-    position = request.form.get('position')
+    position_id = request.form.get('position_id')
     
     if first_name and last_name:
         member = Member(
             first_name=first_name,
             last_name=last_name,
-            position=position if position else None
+            position_id=int(position_id) if position_id else None
         )
         db.session.add(member)
         db.session.commit()
@@ -200,12 +210,41 @@ def deactivate_member(member_id):
     return redirect(url_for('main.list_members'))
 
 
+# Position management routes
+@main.route('/positions')
+def list_positions():
+    """List all available positions."""
+    positions = Position.query.all()
+    
+    return f"""
+    <h1>Position Management</h1>
+    <p><a href="/">← Back to Dashboard</a> | <a href="/members">Manage Members</a></p>
+    
+    <h2>Available Positions</h2>
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Position</th>
+            <th>Description</th>
+            <th>Member Count</th>
+        </tr>
+        {''.join([f'<tr><td><strong>{pos.name.title()}</strong></td><td>{pos.description or "No description"}</td><td>{len(pos.members)} members</td></tr>' for pos in positions])}
+    </table>
+    """
+
+
 # API Routes
 @main.route('/api/members')
 def api_members():
     """API endpoint to get all members as JSON."""
     members = Member.query.all()
     return jsonify([member.to_dict() for member in members])
+
+
+@main.route('/api/positions')
+def api_positions():
+    """API endpoint to get all positions as JSON."""
+    positions = Position.query.all()
+    return jsonify([{'id': p.id, 'name': p.name, 'description': p.description, 'member_count': len(p.members)} for p in positions])
 
 
 @main.route('/api/members/<int:member_id>')

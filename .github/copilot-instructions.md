@@ -53,12 +53,20 @@ flask run
 
 ## Core Data Models (To Implement)
 
-### Members Table Schema
-Required columns for team member records:
+### Database Schema
+
+#### Positions Table
+Predefined team positions with normalized structure:
+- `id` - Primary key (INTEGER, auto-increment)
+- `name` - Position name (TEXT, UNIQUE, NOT NULL): 'member', 'lead', 'mentor', 'coach'
+- `description` - Position description (TEXT)
+
+#### Members Table Schema
+Team member records with foreign key to positions:
 - `id` - Primary key (INTEGER, auto-increment)
 - `first_name` - Member's first name (TEXT, NOT NULL)
 - `last_name` - Member's last name (TEXT, NOT NULL)  
-- `position` - Member's role/position (TEXT)
+- `position_id` - Foreign key to positions table (INTEGER, nullable)
 - `active` - Active status flag (BOOLEAN, default TRUE)
 - `checked_in` - Current check-in status (BOOLEAN, default FALSE)
 - `last_updated` - Timestamp of last record update (DATETIME)
@@ -68,6 +76,12 @@ Required columns for team member records:
 - **Meetings**: Meeting details, dates, times, locations, agendas
 - **Attendance**: Meeting attendance records with timestamps and status
 - **Users**: Authentication and authorization (admin vs member access)
+
+### Position System
+- **Four Standard Positions**: member, lead, mentor, coach
+- **Normalized Design**: Positions stored in separate table, referenced by foreign key
+- **Automatic Setup**: Default positions created during database initialization
+- **Backward Compatibility**: Member model includes `position` property for existing code
 
 ## Missing Components (Implementation Needed)
 - Database schema and models (`db.py`, `schema.sql`) with attendance tracking tables
