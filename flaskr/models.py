@@ -28,7 +28,7 @@ class Position(db.Model):
         default_positions = [
             {'name': 'member', 'description': 'Regular team member'},
             {'name': 'lead', 'description': 'Team lead with additional responsibilities'},
-            {'name': 'mentor', 'description': 'Experienced member who guides others'},
+            {'name': 'mentor', 'description': 'Adult Professional who guides others'},
             {'name': 'coach', 'description': 'Team coach providing guidance and training'}
         ]
         
