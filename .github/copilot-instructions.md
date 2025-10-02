@@ -66,7 +66,7 @@ Team member records with foreign key to positions:
 - `id` - Primary key (INTEGER, auto-increment)
 - `first_name` - Member's first name (TEXT, NOT NULL)
 - `last_name` - Member's last name (TEXT, NOT NULL)  
-- `position_id` - Foreign key to positions table (INTEGER, nullable)
+- `position_id` - Foreign key to positions table (INTEGER, REQUIRED)
 - `active` - Active status flag (BOOLEAN, default TRUE)
 - `checked_in` - Current check-in status (BOOLEAN, default FALSE)
 - `last_updated` - Timestamp of last record update (DATETIME)
@@ -79,6 +79,7 @@ Team member records with foreign key to positions:
 
 ### Position System
 - **Four Standard Positions**: member, lead, mentor, coach
+- **Required Assignment**: All members must be assigned a position (nullable=False)
 - **Normalized Design**: Positions stored in separate table, referenced by foreign key
 - **Automatic Setup**: Default positions created during database initialization
 - **Backward Compatibility**: Member model includes `position` property for existing code

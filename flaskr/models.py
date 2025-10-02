@@ -49,7 +49,7 @@ class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
-    position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=True)
+    position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     checked_in = db.Column(db.Boolean, default=False, nullable=False)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

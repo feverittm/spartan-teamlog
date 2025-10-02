@@ -23,7 +23,6 @@ def index():
     member_rows = []
     for member in all_members:
         # Status indicators
-        status_badge = "🟢 Active" if member.active else "🔴 Inactive"
         attendance_badge = "✅ Present" if member.checked_in else "❌ Absent"
         
         # Quick action buttons
@@ -39,7 +38,6 @@ def index():
         <tr style="{'background-color: #f8f9fa;' if not member.active else ''}">
             <td><strong>{member.full_name}</strong></td>
             <td>{member.position or '<em>No position</em>'}</td>
-            <td>{status_badge}</td>
             <td>{attendance_badge}</td>
             <td style="font-size: 0.9em; color: #6c757d;">{last_updated}</td>
             <td>{attendance_action}</td>
@@ -57,7 +55,7 @@ def index():
             
             /* Titlebar Styles */
             .titlebar {{ 
-                background: linear-gradient(135deg, #dc143c 0%, #8b0000 100%);
+                background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
                 color: white; 
                 padding: 15px 0; 
                 box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -100,6 +98,49 @@ def index():
                 100% {{ opacity: 1; }}
             }}
             
+            /* Quick Check-in Form */
+            .quick-checkin {{ 
+                display: flex; 
+                align-items: center; 
+                gap: 8px;
+                background: rgba(255,255,255,0.15);
+                padding: 8px 12px;
+                border-radius: 20px;
+                border: 1px solid rgba(255,255,255,0.3);
+            }}
+            .quick-checkin input {{
+                background: rgba(255,255,255,0.9);
+                border: none;
+                padding: 6px 10px;
+                border-radius: 15px;
+                font-size: 14px;
+                width: 150px;
+                color: #333;
+            }}
+            .quick-checkin input::placeholder {{
+                color: #666;
+                opacity: 0.8;
+            }}
+            .quick-checkin button {{
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 15px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.2s;
+            }}
+            .quick-checkin button:hover {{
+                background: #218838;
+            }}
+            .quick-checkin-label {{
+                font-size: 12px;
+                opacity: 0.9;
+                margin-right: 5px;
+            }}
+            
             /* Main Content */
             .main-content {{ max-width: 1200px; margin: 0 auto; padding: 20px; }}
             table {{ width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
@@ -108,9 +149,35 @@ def index():
             tr:hover {{ background-color: #f8f9fa; }}
             .summary {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
             .nav-links {{ margin: 20px 0; }}
-            .nav-links a {{ margin-right: 15px; padding: 10px 20px; background: #dc143c; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }}
-            .nav-links a:hover {{ background: #8b0000; }}
+            .nav-links a {{ margin-right: 15px; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }}
+            .nav-links a:hover {{ background: #1d4ed8; }}
         </style>
+        <script>
+            // Auto-focus the quick check-in input when page loads
+            window.addEventListener('DOMContentLoaded', function() {{
+                const quickCheckinInput = document.querySelector('.quick-checkin input[name="member_name"]');
+                if (quickCheckinInput) {{
+                    // Add enter key handler
+                    quickCheckinInput.addEventListener('keypress', function(e) {{
+                        if (e.key === 'Enter') {{
+                            e.preventDefault();
+                            this.form.submit();
+                        }}
+                    }});
+                    
+                    // Auto-complete suggestion (simple implementation)
+                    quickCheckinInput.addEventListener('input', function() {{
+                        // Clear previous timeout
+                        clearTimeout(this.searchTimeout);
+                        
+                        // Add slight delay for better UX
+                        this.searchTimeout = setTimeout(() => {{
+                            // Here you could add AJAX search suggestions in the future
+                        }}, 300);
+                    }});
+                }}
+            }});
+        </script>
     </head>
     <body>
         <!-- Titlebar -->
@@ -124,6 +191,11 @@ def index():
                     </div>
                 </div>
                 <div class="titlebar-right">
+                    <form method="POST" action="/quick-checkin" class="quick-checkin">
+                        <span class="quick-checkin-label">Quick Check-in:</span>
+                        <input type="text" name="member_name" placeholder="Enter name..." autocomplete="off" required>
+                        <button type="submit">✓</button>
+                    </form>
                     <div class="live-status">
                         <div class="status-dot"></div>
                         Live Dashboard
@@ -150,7 +222,6 @@ def index():
                 <tr>
                     <th>Name</th>
                     <th>Position</th>
-                    <th>Status</th>
                     <th>Attendance</th>
                     <th>Last Updated</th>
                     <th>Quick Action</th>
@@ -220,8 +291,8 @@ def list_members():
             <input type="text" name="last_name" placeholder="Last Name" required style="padding: 5px; margin-right: 10px;">
         </div>
         <div style="margin-bottom: 10px;">
-            <select name="position_id" style="padding: 5px; margin-right: 10px;">
-                <option value="">Select Position (Optional)</option>
+            <select name="position_id" required style="padding: 5px; margin-right: 10px;">
+                <option value="">Select Position (Required)</option>
                 {''.join([f'<option value="{pos.id}">{pos.name.title()}</option>' for pos in positions])}
             </select>
             <button type="submit" style="padding: 5px 15px; background: #28a745; color: white; border: none; border-radius: 3px;">Add Member</button>
@@ -237,11 +308,11 @@ def add_member():
     last_name = request.form.get('last_name')
     position_id = request.form.get('position_id')
     
-    if first_name and last_name:
+    if first_name and last_name and position_id:
         member = Member(
             first_name=first_name,
             last_name=last_name,
-            position_id=int(position_id) if position_id else None
+            position_id=int(position_id)
         )
         db.session.add(member)
         db.session.commit()
@@ -249,12 +320,46 @@ def add_member():
     return redirect(url_for('main.list_members'))
 
 
+@main.route('/quick-checkin', methods=['POST'])
+def quick_checkin():
+    """Quick check-in by member name from titlebar form."""
+    member_name = request.form.get('member_name', '').strip()
+    
+    if member_name:
+        # Search for member by first name, last name, or full name (case insensitive)
+        members = Member.query.filter(
+            db.or_(
+                Member.first_name.ilike(f'%{member_name}%'),
+                Member.last_name.ilike(f'%{member_name}%'),
+                db.func.lower(db.func.concat(Member.first_name, ' ', Member.last_name)).like(f'%{member_name.lower()}%')
+            ),
+            Member.active == True
+        ).all()
+        
+        if len(members) == 1:
+            # Exact match found - check in the member
+            member = members[0]
+            if not member.checked_in:
+                member.check_in()
+                # You could add a flash message here if you implement flash messages
+            # Redirect back to dashboard
+            return redirect(url_for('main.index'))
+        elif len(members) > 1:
+            # Multiple matches - redirect to dashboard with error (could implement flash message)
+            return redirect(url_for('main.index'))
+        else:
+            # No matches - redirect to dashboard with error (could implement flash message)  
+            return redirect(url_for('main.index'))
+    
+    return redirect(url_for('main.index'))
+
+
 @main.route('/members/<int:member_id>/checkin')
 def checkin_member(member_id):
     """Check in a member."""
     member = Member.query.get_or_404(member_id)
     member.check_in()
-    return redirect(url_for('main.list_members'))
+    return redirect(url_for('main.index'))
 
 
 @main.route('/members/<int:member_id>/checkout')
@@ -262,7 +367,7 @@ def checkout_member(member_id):
     """Check out a member."""
     member = Member.query.get_or_404(member_id)
     member.check_out()
-    return redirect(url_for('main.list_members'))
+    return redirect(url_for('main.index'))
 
 
 @main.route('/members/<int:member_id>/activate')
