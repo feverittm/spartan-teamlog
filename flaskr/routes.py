@@ -19,25 +19,24 @@ def index():
     total_active = len(active_members)
     total_members = len(all_members)
     
-    # Build member table rows
+    # Build member table rows - only show active members
     member_rows = []
-    for member in all_members:
+    for member in active_members:
         # Status indicators
         attendance_badge = "✅ Present" if member.checked_in else "❌ Absent"
         
-        # Quick action buttons
-        if member.active:
-            attendance_action = f'<a href="/members/{member.id}/checkout" style="color: #dc3545;">Check Out</a>' if member.checked_in else f'<a href="/members/{member.id}/checkin" style="color: #28a745;">Check In</a>'
-        else:
-            attendance_action = '<span style="color: #6c757d;">Inactive</span>'
+        # Quick action buttons (all members shown are active)
+        attendance_action = f'<a href="/members/{member.id}/checkout" style="color: #dc3545;">Check Out</a>' if member.checked_in else f'<a href="/members/{member.id}/checkin" style="color: #28a745;">Check In</a>'
         
         # Last updated formatting
         last_updated = member.last_updated.strftime('%m/%d %H:%M') if member.last_updated else 'Never'
         
+        # Position-based name coloring
+        position_class = f'position-{member.position}' if member.position else 'position-member'
+        
         member_rows.append(f"""
-        <tr style="{'background-color: #f8f9fa;' if not member.active else ''}">
-            <td><strong>{member.full_name}</strong></td>
-            <td>{member.position or '<em>No position</em>'}</td>
+        <tr>
+            <td><strong class="{position_class}">{member.full_name}</strong></td>
             <td>{attendance_badge}</td>
             <td style="font-size: 0.9em; color: #6c757d;">{last_updated}</td>
             <td>{attendance_action}</td>
@@ -151,6 +150,12 @@ def index():
             .nav-links {{ margin: 20px 0; }}
             .nav-links a {{ margin-right: 15px; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; }}
             .nav-links a:hover {{ background: #1d4ed8; }}
+            
+            /* Position-based name colors */
+            .position-member {{ color: #2563eb; font-weight: 600; }}  /* Blue for members */
+            .position-lead {{ color: #dc2626; font-weight: 600; }}    /* Red for leads */
+            .position-mentor {{ color: #059669; font-weight: 600; }}  /* Green for mentors */
+            .position-coach {{ color: #7c2d12; font-weight: 600; }}   /* Brown for coaches */
         </style>
         <script>
             // Auto-focus the quick check-in input when page loads
@@ -216,12 +221,21 @@ def index():
             <p><strong>Total Members:</strong> {total_members} ({total_active} active, {total_members - total_active} inactive)</p>
         </div>
         
+        <div class="summary" style="padding: 15px;">
+            <h3>🎯 Position Legend</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <span><strong class="position-member">■</strong> Member</span>
+                <span><strong class="position-lead">■</strong> Lead</span>
+                <span><strong class="position-mentor">■</strong> Mentor</span>
+                <span><strong class="position-coach">■</strong> Coach</span>
+            </div>
+        </div>
+        
         <h2>👥 Team Members</h2>
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Position</th>
                     <th>Attendance</th>
                     <th>Last Updated</th>
                     <th>Quick Action</th>
@@ -324,6 +338,7 @@ def add_member():
 def quick_checkin():
     """Quick check-in by member name from titlebar form."""
     member_name = request.form.get('member_name', '').strip()
+    print(member_name)
     
     if member_name:
         # Search for member by first name, last name, or full name (case insensitive)
