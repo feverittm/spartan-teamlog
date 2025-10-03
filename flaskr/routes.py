@@ -201,7 +201,7 @@ def index():
                 <div class="titlebar-right">
                     <form method="POST" action="/quick-checkin" class="quick-checkin">
                         <span class="quick-checkin-label">Quick Check-in:</span>
-                        <input type="text" name="member_name" placeholder="Enter name..." autocomplete="off" required>
+                        <input type="text" name="member_name" placeholder="Enter name or ID hash..." autocomplete="off" required>
                         <button type="submit">✓</button>
                     </form>
                     <div class="live-status">
@@ -269,6 +269,7 @@ def list_members():
         member_list.append(f"""
         <tr>
             <td>{member.full_name}</td>
+            <td style="font-family: monospace; color: #6c757d;">{member.idhash}</td>
             <td>{member.position or 'N/A'}</td>
             <td>{status}</td>
             <td>{checkin_status}</td>
@@ -287,6 +288,7 @@ def list_members():
     <table border="1" cellpadding="10">
         <tr>
             <th>Name</th>
+            <th>ID Hash</th>
             <th>Position</th>
             <th>Status</th>
             <th>Attendance</th>
@@ -352,33 +354,56 @@ def checkout_all_members():
 
 @main.route('/quick-checkin', methods=['POST'])
 def quick_checkin():
-    """Quick check-in by member name from titlebar form."""
-    member_name = request.form.get('member_name', '').strip()
-    print(member_name)
+    """Quick check-in by member name or idhash from titlebar form."""
+    member_input = request.form.get('member_name', '').strip()
+    print(f"Quick checkin input: {member_input}")
     
-    if member_name:
-        # Search for member by first name, last name, or full name (case insensitive)
-        members = Member.query.filter(
-            db.or_(
-                Member.first_name.ilike(f'%{member_name}%'),
-                Member.last_name.ilike(f'%{member_name}%')            ),
-            Member.active == True
-        ).all()
-        
-        if len(members) == 1:
-            # Exact match found - check in the member
-            member = members[0]
-            if not member.checked_in:
-                member.check_in()
-                # You could add a flash message here if you implement flash messages
-            # Redirect back to dashboard
-            return redirect(url_for('main.index'))
-        elif len(members) > 1:
-            # Multiple matches - redirect to dashboard with error (could implement flash message)
-            return redirect(url_for('main.index'))
+    if member_input:
+        # Check if input is numeric (potential idhash)
+        if member_input.isdigit():
+            # Search by idhash
+            member = Member.query.filter_by(
+                idhash=int(member_input),
+                active=True
+            ).first()
+            
+            if member:
+                if not member.checked_in:
+                    member.check_in()
+                    print(f"Checked in member by idhash: {member.full_name} ({member.idhash})")
+                else:
+                    print(f"Member already checked in: {member.full_name} ({member.idhash})")
+                return redirect(url_for('main.index'))
+            else:
+                print(f"No active member found with idhash: {member_input}")
+                return redirect(url_for('main.index'))
         else:
-            # No matches - redirect to dashboard with error (could implement flash message)  
-            return redirect(url_for('main.index'))
+            # Search for member by first name, last name, or full name (case insensitive)
+            members = Member.query.filter(
+                db.or_(
+                    Member.first_name.ilike(f'%{member_input}%'),
+                    Member.last_name.ilike(f'%{member_input}%')
+                ),
+                Member.active == True
+            ).all()
+            
+            if len(members) == 1:
+                # Exact match found - check in the member
+                member = members[0]
+                if not member.checked_in:
+                    member.check_in()
+                    print(f"Checked in member by name: {member.full_name} ({member.idhash})")
+                else:
+                    print(f"Member already checked in: {member.full_name} ({member.idhash})")
+                return redirect(url_for('main.index'))
+            elif len(members) > 1:
+                # Multiple matches - redirect to dashboard with error
+                print(f"Multiple members found for name: {member_input}")
+                return redirect(url_for('main.index'))
+            else:
+                # No matches - redirect to dashboard with error
+                print(f"No active member found with name: {member_input}")
+                return redirect(url_for('main.index'))
     
     return redirect(url_for('main.index'))
 

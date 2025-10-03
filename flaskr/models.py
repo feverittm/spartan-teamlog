@@ -47,6 +47,7 @@ class Member(db.Model):
     __tablename__ = 'members'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idhash = db.Column(db.Integer, nullable=False, unique=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
@@ -105,6 +106,7 @@ class Member(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'full_name': self.full_name,
+            'idhash': self.idhash,
             'position': self.position,
             'position_id': self.position_id,
             'active': self.active,

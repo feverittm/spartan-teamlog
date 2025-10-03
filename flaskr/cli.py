@@ -32,22 +32,22 @@ def seed_db_command():
     # Create 10 sample members with diverse roles
     sample_members = [
         # Team Leads
-        Member(first_name='John', last_name='Doe', position_id=lead_pos.id, active=True),
-        Member(first_name='Sarah', last_name='Johnson', position_id=lead_pos.id, active=True),
+        Member(first_name='John', last_name='Doe', idhash=1, position_id=lead_pos.id, active=True),
+        Member(first_name='Sarah', last_name='Johnson', idhash=5, position_id=lead_pos.id, active=True),
         
         # Mentors
-        Member(first_name='Bob', last_name='Wilson', position_id=mentor_pos.id, active=True),
-        Member(first_name='Maria', last_name='Garcia', position_id=mentor_pos.id, active=True),
-        
+        Member(first_name='Bob', last_name='Wilson', idhash=2, position_id=mentor_pos.id, active=True),
+        Member(first_name='Maria', last_name='Garcia', idhash=3, position_id=mentor_pos.id, active=True),
+
         # Coach
-        Member(first_name='Charlie', last_name='Brown', position_id=coach_pos.id, active=True),
-        
+        Member(first_name='Charlie', last_name='Brown', idhash=4, position_id=coach_pos.id, active=True),
+
         # Regular Members
-        Member(first_name='Jane', last_name='Smith', position_id=member_pos.id, active=True),
-        Member(first_name='Alice', last_name='Davis', position_id=member_pos.id, active=True),
-        Member(first_name='Mike', last_name='Rodriguez', position_id=member_pos.id, active=True),
-        Member(first_name='Emma', last_name='Thompson', position_id=member_pos.id, active=True),
-        Member(first_name='David', last_name='Lee', position_id=member_pos.id, active=False),
+        Member(first_name='Jane', last_name='Smith', idhash=6, position_id=member_pos.id, active=True),
+        Member(first_name='Alice', last_name='Davis', idhash=7, position_id=member_pos.id, active=True),
+        Member(first_name='Mike', last_name='Rodriguez', idhash=8, position_id=member_pos.id, active=True),
+        Member(first_name='Emma', last_name='Thompson', idhash=9, position_id=member_pos.id, active=True),
+        Member(first_name='David', last_name='Lee', idhash=10, position_id=member_pos.id, active=False),
     ]
     
     for member in sample_members:

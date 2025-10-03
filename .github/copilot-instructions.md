@@ -131,3 +131,5 @@ When working on this project, prioritize implementing core components in this or
 5. Attendance tracking (mark attendance, view history)
 6. Reporting and dashboard features
 7. Test suite covering attendance scenarios
+
+# id hash 0010368194 example card
