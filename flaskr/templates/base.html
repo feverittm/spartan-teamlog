@@ -1,0 +1,76 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title><%block title %>Spartan Teamlog - Dashboard<% endblock %></title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+        <!-- get custom JavaScript -->
+		<script src="{{url_for('static',filename='js/custom.js')}}"></script>
+        
+        <!-- get custom JavaScript -->
+		<script src="{{url_for('static',filename='js/custom.js')}}"></script>
+    </head>
+    <body>
+        <!-- Titlebar -->
+        <div class="titlebar">
+            <div class="titlebar-content">
+                <div class="titlebar-left">
+                    <img src="/static/images/997_logo.png" alt="997 Logo" class="titlebar-logo">
+                    <div>
+                        <div class="titlebar-title">Spartan Teamlog</div>
+                        <div class="titlebar-subtitle">Team Attendance Management</div>
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                    <form method="POST" action="/quick-checkin" class="quick-checkin">
+                        <span class="quick-checkin-label">Quick Check-in:</span>
+                        <input type="text" name="member_name" placeholder="Enter name or ID hash..." autocomplete="off" required>
+                        <button type="submit">✓</button>
+                    </form>
+                    <div class="live-status">
+                        <div class="status-dot"></div>
+                        Live Dashboard
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        {checked_in_count}/{total_active} Present
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content"></div>
+		{% block contents %}
+		{% endblock %}
+		<!-- End Main content -->
+
+        <div class="summary">
+            <h2>📊 Attendance Summary</h2>
+            <p><strong>Present:</strong> {checked_in_count}/{total_active} active members</p>
+            <p><strong>Total Members:</strong> {total_members} ({total_active} active, {total_members - total_active} inactive)</p>
+        </div>
+        
+        <h2>👥 Team Members</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Attendance</th>
+                    <th>Last Updated</th>
+                    <th>Quick Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join(member_rows)}
+            </tbody>
+        </table>
+        
+            <div class="nav-links">
+                <a href="/members">👤 Manage Members</a>
+                <a href="/positions">🏷️ Manage Positions</a>
+                <a href="/api/members">📡 Members API</a>
+                <a href="/api/positions">📡 Positions API</a>
+            </div>
+        </div>
+    </body>
+    </html>
