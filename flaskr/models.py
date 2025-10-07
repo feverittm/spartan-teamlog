@@ -1,6 +1,6 @@
 """Database models for Spartan Teamlog."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from .db import db
 
 
@@ -53,7 +53,7 @@ class Member(db.Model):
     position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     checked_in = db.Column(db.Boolean, default=False, nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
     def __repr__(self):
         return f'<Member {self.first_name} {self.last_name}>'
@@ -74,19 +74,19 @@ class Member(db.Model):
     def check_in(self):
         """Mark member as checked in and update timestamp."""
         self.checked_in = True
-        self.last_updated = datetime.utcnow()
+        self.last_updated = datetime.now(timezone.utc)
         db.session.commit()
     
     def check_out(self):
         """Mark member as checked out and update timestamp."""
         self.checked_in = False
-        self.last_updated = datetime.utcnow()
+        self.last_updated = datetime.now(timezone.utc)
         db.session.commit()
     
     def toggle_active_status(self):
         """Toggle the active status of the member."""
         self.active = not self.active
-        self.last_updated = datetime.utcnow()
+        self.last_updated = datetime.now(timezone.utc)
         db.session.commit()
     
     @classmethod
