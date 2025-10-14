@@ -113,3 +113,6 @@ class Member(db.Model):
             'checked_in': self.checked_in,
             'last_updated': self.last_updated.isoformat() if self.last_updated else None
         }
+        
+        0010368194
+        

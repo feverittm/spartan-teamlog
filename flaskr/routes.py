@@ -1,5 +1,6 @@
 """Routes for the Spartan Teamlog application."""
 
+from datetime import datetime, timezone
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
 from .models import Member, Position
 from .db import db
@@ -263,8 +264,10 @@ def list_members():
         checkin_status = "Checked In" if member.checked_in else "Not Checked In"
         
         # Create action links
-        checkin_action = f'<a href="/members/{member.id}/checkout">Check Out</a>' if member.checked_in else f'<a href="/members/{member.id}/checkin">Check In</a>'
-        toggle_action = f'<a href="/members/{member.id}/deactivate">Deactivate</a>' if member.active else f'<a href="/members/{member.id}/activate">Activate</a>'
+        checkin_action = f'<a href="/members/{member.id}/checkout" style="color: #dc3545;">Check Out</a>' if member.checked_in else f'<a href="/members/{member.id}/checkin" style="color: #28a745;">Check In</a>'
+        toggle_action = f'<a href="/members/{member.id}/deactivate" style="color: #ffc107;">Deactivate</a>' if member.active else f'<a href="/members/{member.id}/activate" style="color: #17a2b8;">Activate</a>'
+        edit_action = f'<a href="/members/{member.id}/edit" style="color: #007bff;">Edit</a>'
+        delete_action = f'<a href="/members/{member.id}/delete" onclick="return confirm(\'Are you sure you want to delete {member.full_name}?\')" style="color: #dc3545;">Delete</a>'
         
         member_list.append(f"""
         <tr>
@@ -273,7 +276,7 @@ def list_members():
             <td>{member.position or 'N/A'}</td>
             <td>{status}</td>
             <td>{checkin_status}</td>
-            <td>{checkin_action} | {toggle_action}</td>
+            <td>{checkin_action} | {toggle_action} | {edit_action} | {delete_action}</td>
         </tr>
         """)
     
@@ -302,6 +305,7 @@ def list_members():
         <div style="margin-bottom: 10px;">
             <input type="text" name="first_name" placeholder="First Name" required style="padding: 5px; margin-right: 10px;">
             <input type="text" name="last_name" placeholder="Last Name" required style="padding: 5px; margin-right: 10px;">
+            <input type="number" name="idhash" placeholder="ID Hash" required style="padding: 5px; margin-right: 10px;">
         </div>
         <div style="margin-bottom: 10px;">
             <select name="position_id" required style="padding: 5px; margin-right: 10px;">
@@ -319,17 +323,118 @@ def add_member():
     """Add a new member."""
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
+    idhash = request.form.get('idhash')
     position_id = request.form.get('position_id')
     
-    if first_name and last_name and position_id:
-        member = Member(
-            first_name=first_name,
-            last_name=last_name,
-            position_id=int(position_id)
-        )
-        db.session.add(member)
-        db.session.commit()
+    if first_name and last_name and idhash and position_id:
+        # Check if idhash already exists
+        existing_member = Member.query.filter_by(idhash=int(idhash)).first()
+        if existing_member:
+            flash(f'ID Hash {idhash} already exists for {existing_member.full_name}', 'error')
+        else:
+            member = Member(
+                first_name=first_name,
+                last_name=last_name,
+                idhash=int(idhash),
+                position_id=int(position_id)
+            )
+            db.session.add(member)
+            db.session.commit()
+            flash(f'Successfully added {first_name} {last_name}', 'success')
+    else:
+        flash('All fields are required', 'error')
     
+    return redirect(url_for('main.list_members'))
+
+
+@main.route('/members/<int:member_id>/edit')
+def edit_member(member_id):
+    """Show edit form for a member."""
+    member = Member.query.get_or_404(member_id)
+    positions = Position.query.all()
+    
+    return f"""
+    <h1>Edit Member: {member.full_name}</h1>
+    <p><a href="/members">← Back to Member Management</a></p>
+    
+    <form method="POST" action="/members/{member.id}/update" style="margin-top: 20px;">
+        <div style="margin-bottom: 10px;">
+            <label>First Name:</label><br>
+            <input type="text" name="first_name" value="{member.first_name}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>Last Name:</label><br>
+            <input type="text" name="last_name" value="{member.last_name}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>ID Hash:</label><br>
+            <input type="number" name="idhash" value="{member.idhash}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>Position:</label><br>
+            <select name="position_id" required style="padding: 5px; margin-right: 10px; width: 200px;">
+                {''.join([f'<option value="{pos.id}" {"selected" if pos.id == member.position_id else ""}>{pos.name.title()}</option>' for pos in positions])}
+            </select>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>Status:</label><br>
+            <select name="active" style="padding: 5px; margin-right: 10px; width: 200px;">
+                <option value="1" {"selected" if member.active else ""}>Active</option>
+                <option value="0" {"selected" if not member.active else ""}>Inactive</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 3px; margin-right: 10px;">Update Member</button>
+            <a href="/members" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px;">Cancel</a>
+        </div>
+    </form>
+    """
+
+
+@main.route('/members/<int:member_id>/update', methods=['POST'])
+def update_member(member_id):
+    """Update a member's information."""
+    member = Member.query.get_or_404(member_id)
+    
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
+    idhash = request.form.get('idhash')
+    position_id = request.form.get('position_id')
+    active = request.form.get('active') == '1'
+    
+    if first_name and last_name and idhash and position_id:
+        # Check if idhash already exists for a different member
+        existing_member = Member.query.filter(Member.idhash == int(idhash), Member.id != member_id).first()
+        if existing_member:
+            flash(f'ID Hash {idhash} already exists for {existing_member.full_name}', 'error')
+            return redirect(url_for('main.edit_member', member_id=member_id))
+        
+        member.first_name = first_name
+        member.last_name = last_name
+        member.idhash = int(idhash)
+        member.position_id = int(position_id)
+        member.active = active
+        member.last_updated = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        flash(f'Successfully updated {member.full_name}', 'success')
+    else:
+        flash('All fields are required', 'error')
+        return redirect(url_for('main.edit_member', member_id=member_id))
+    
+    return redirect(url_for('main.list_members'))
+
+
+@main.route('/members/<int:member_id>/delete')
+def delete_member(member_id):
+    """Delete a member."""
+    member = Member.query.get_or_404(member_id)
+    member_name = member.full_name
+    
+    db.session.delete(member)
+    db.session.commit()
+    
+    flash(f'Successfully deleted {member_name}', 'success')
     return redirect(url_for('main.list_members'))
 
 
