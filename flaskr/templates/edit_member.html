@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Member - Spartan Teamlog{% endblock %}
+
+{% block content %}
+<h1>Edit Member: {{ member.full_name }}</h1>
+<p><a href="{{ url_for('main.list_members') }}">← Back to Member Management</a></p>
+
+<form method="POST" action="{{ url_for('main.update_member', member_id=member.id) }}" style="margin-top: 20px;">
+    <div style="margin-bottom: 10px;">
+        <label>First Name:</label><br>
+        <input type="text" name="first_name" value="{{ member.first_name }}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Last Name:</label><br>
+        <input type="text" name="last_name" value="{{ member.last_name }}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>ID Hash:</label><br>
+        <input type="number" name="idhash" value="{{ member.idhash }}" required style="padding: 5px; margin-right: 10px; width: 200px;">
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Position:</label><br>
+        <select name="position_id" required style="padding: 5px; margin-right: 10px; width: 200px;">
+            {% for position in positions %}
+                <option value="{{ position.id }}" {% if position.id == member.position_id %}selected{% endif %}>
+                    {{ position.name.title() }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label>Status:</label><br>
+        <select name="active" style="padding: 5px; margin-right: 10px; width: 200px;">
+            <option value="1" {% if member.active %}selected{% endif %}>Active</option>
+            <option value="0" {% if not member.active %}selected{% endif %}>Inactive</option>
+        </select>
+    </div>
+    <div>
+        <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 3px; margin-right: 10px;">Update Member</button>
+        <a href="{{ url_for('main.list_members') }}" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px;">Cancel</a>
+    </div>
+</form>
+{% endblock %}

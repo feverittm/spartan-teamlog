@@ -1,12 +1,60 @@
 {% extends "base.html" %}
 
-{% block metatags %}
-<title>Spartan Teamlog - Dashboard</title>
-<meta name="description" content="Dashboard.">
-{% endblock %}
+{% block title %}Spartan Teamlog - Dashboard{% endblock %}
 
-{% block contents %}
-<div class="container">
+{% block content %}
+<div class="summary">
+    <h2>📊 Attendance Summary</h2>
+    <p><strong>Present:</strong> {{ attendance_summary.checked_in }}/{{ attendance_summary.total_active }} active members</p>
+    <p><strong>Total Members:</strong> {{ attendance_summary.total_members }} ({{ attendance_summary.total_active }} active, {{ attendance_summary.total_members - attendance_summary.total_active }} inactive)</p>
+</div>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Attendance</th>
+            <th>Last Updated</th>
+            <th>Quick Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for member in members %}
+        <tr>
+            <td>
+                <strong class="position-{{ member.position or 'member' }}">
+                    {{ member.full_name }}
+                </strong>
+            </td>
+            <td>
+                {% if member.checked_in %}
+                    ✅ Present
+                {% else %}
+                    ❌ Absent
+                {% endif %}
+            </td>
+            <td style="font-size: 0.9em; color: #6c757d;">
+                {% if member.last_updated %}
+                    {{ member.last_updated.strftime('%m/%d %H:%M') }}
+                {% else %}
+                    Never
+                {% endif %}
+            </td>
+            <td>
+                {% if member.checked_in %}
+                    <a href="{{ url_for('main.checkout_member', member_id=member.id) }}" style="color: #dc3545;">Check Out</a>
+                {% else %}
+                    <a href="{{ url_for('main.checkin_member', member_id=member.id) }}" style="color: #28a745;">Check In</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
+<div class="nav-links">
+    <a href="{{ url_for('main.list_members') }}">👤 Manage Members</a>
+    <a href="{{ url_for('main.list_positions') }}">🏷️ Manage Positions</a>
+    <a href="{{ url_for('main.api_members') }}">📡 Members API</a>
+    <a href="{{ url_for('main.api_positions') }}">📡 Positions API</a>
 </div>
 {% endblock %}
