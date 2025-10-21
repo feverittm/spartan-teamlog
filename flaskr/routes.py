@@ -212,7 +212,8 @@ def quick_checkin():
             members = Member.query.filter(
                 db.or_(
                     Member.first_name.ilike(f'%{member_input}%'),
-                    Member.last_name.ilike(f'%{member_input}%')
+                    Member.last_name.ilike(f'%{member_input}%'),
+                    (Member.first_name + ' ' + Member.last_name).ilike(f'%{member_input}%')
                 ),
                 Member.active == True
             ).all()

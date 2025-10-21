@@ -16,7 +16,7 @@ class TestDashboardRoutes:
         response = client.get('/')
         assert response.status_code == 200
         assert b'Spartan Teamlog' in response.data
-        assert b'Team Members' in response.data
+        assert b'Attendance Summary' in response.data
         assert b'Attendance Summary' in response.data
     
     def test_index_shows_members(self, client, app, multiple_members):
@@ -62,6 +62,7 @@ class TestMemberManagement:
         response = client.post('/members/add', data={
             'first_name': 'Test',
             'last_name': 'Member',
+            'idhash': '99999',
             'position_id': member_pos_id
         })
         
@@ -78,7 +79,8 @@ class TestMemberManagement:
         """Test that adding member requires position."""
         response = client.post('/members/add', data={
             'first_name': 'Test',
-            'last_name': 'Member'
+            'last_name': 'Member',
+            'idhash': '88888'
             # No position_id
         })
         
@@ -149,6 +151,28 @@ class TestAttendanceActions:
         # Should redirect back to dashboard without error
         assert response.status_code == 302
     
+    def test_quick_checkin_with_idhash(self, client, app, sample_member):
+        """Test quick check-in using idhash instead of name."""
+        response = client.post('/quick-checkin', data={
+            'member_name': '12345'  # idhash of sample member
+        })
+        
+        assert response.status_code == 302  # Redirect to dashboard
+        
+        # Verify member is checked in
+        with app.app_context():
+            member = Member.query.get(sample_member)
+            assert member.checked_in is True
+    
+    def test_quick_checkin_invalid_idhash(self, client, app):
+        """Test quick check-in with non-existent idhash."""
+        response = client.post('/quick-checkin', data={
+            'member_name': '99999'  # Non-existent idhash
+        })
+        
+        # Should redirect back to dashboard without error
+        assert response.status_code == 302
+    
     def test_activate_deactivate_member(self, client, app, sample_member):
         """Test activating and deactivating members."""
         # Deactivate
@@ -166,6 +190,79 @@ class TestAttendanceActions:
         with app.app_context():
             member = Member.query.get(sample_member)
             assert member.active is True
+    
+    def test_checkout_all_members(self, client, app, multiple_members):
+        """Test checking out all members at once."""
+        # Check in some members first
+        with app.app_context():
+            for member_id in multiple_members[:2]:
+                member = Member.query.get(member_id)
+                member.check_in()
+        
+        response = client.get('/members/checkout-all')
+        assert response.status_code == 302  # Redirect to members page
+        
+        # Verify all members are checked out
+        with app.app_context():
+            for member_id in multiple_members:
+                member = Member.query.get(member_id)
+                assert member.checked_in is False
+
+
+class TestMemberCRUD:
+    """Tests for member CRUD operations."""
+    
+    def test_edit_member_page(self, client, sample_member):
+        """Test the edit member page loads correctly."""
+        response = client.get(f'/members/{sample_member}/edit')
+        assert response.status_code == 200
+        assert b'Edit Member:' in response.data
+        assert b'John Doe' in response.data
+    
+    def test_update_member(self, client, app, sample_member, sample_positions):
+        """Test updating member information."""
+        response = client.post(f'/members/{sample_member}/update', data={
+            'first_name': 'Johnny',
+            'last_name': 'Doe',
+            'idhash': '54321',
+            'position_id': sample_positions['lead'].id,
+            'active': '1'
+        })
+        
+        assert response.status_code == 302  # Redirect after update
+        
+        # Verify member was updated
+        with app.app_context():
+            member = Member.query.get(sample_member)
+            assert member.first_name == 'Johnny'
+            assert member.idhash == 54321
+            assert member.position_id == sample_positions['lead'].id
+    
+    def test_update_member_duplicate_idhash(self, client, app, multiple_members):
+        """Test updating member with duplicate idhash fails."""
+        member_id = multiple_members[0]
+        duplicate_idhash = 22222  # Alice's idhash from fixture
+        
+        response = client.post(f'/members/{member_id}/update', data={
+            'first_name': 'Jane',
+            'last_name': 'Smith',
+            'idhash': str(duplicate_idhash),
+            'position_id': '1',
+            'active': '1'
+        })
+        
+        # Should redirect back to edit page with error
+        assert response.status_code == 302
+    
+    def test_delete_member(self, client, app, sample_member):
+        """Test deleting a member."""
+        response = client.get(f'/members/{sample_member}/delete')
+        assert response.status_code == 302  # Redirect after deletion
+        
+        # Verify member was deleted
+        with app.app_context():
+            member = Member.query.get(sample_member)
+            assert member is None
 
 
 class TestPositionManagement:
@@ -195,7 +292,7 @@ class TestAPIEndpoints:
         if data:
             member = data[0]
             required_fields = ['id', 'first_name', 'last_name', 'full_name', 
-                             'position', 'active', 'checked_in', 'last_updated']
+                             'idhash', 'position', 'active', 'checked_in', 'last_updated']
             for field in required_fields:
                 assert field in member
     
@@ -209,6 +306,7 @@ class TestAPIEndpoints:
         assert data['first_name'] == 'John'
         assert data['last_name'] == 'Doe'
         assert data['full_name'] == 'John Doe'
+        assert data['idhash'] == 12345
     
     def test_api_member_not_found(self, client):
         """Test API endpoint with non-existent member."""

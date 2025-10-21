@@ -11,15 +11,14 @@ def test_full_workflow(client, app, sample_positions):
     with app.app_context():
         member_pos_id = sample_positions['member'].id
     
-    # 1. Add a new member
-    response = client.post('/members/add', data={
-        'first_name': 'Integration',
-        'last_name': 'Test',
-        'position_id': member_pos_id
-    })
-    assert response.status_code == 302
-    
-    # 2. Verify member appears on dashboard
+        # 1. Add a new member
+        response = client.post('/members/add', data={
+            'first_name': 'Integration',
+            'last_name': 'Test',
+            'idhash': '88888',
+            'position_id': member_pos_id
+        })
+        assert response.status_code == 302    # 2. Verify member appears on dashboard
     response = client.get('/')
     assert response.status_code == 200
     assert b'Integration Test' in response.data
