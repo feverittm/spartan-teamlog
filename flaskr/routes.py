@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
-from .models import Member, Position
+from .models import Member, Position, CiCo
 from .db import db
 
 # Create blueprint
@@ -295,6 +295,32 @@ def list_positions():
     """
 
 
+@main.route('/members/<int:member_id>')
+def member_detail(member_id):
+    """Show detailed information for a specific member including check-in/out history."""
+    member = Member.query.get_or_404(member_id)
+    
+    # Get the member's check-in/out history (last 50 records)
+    cico_records = CiCo.get_member_records(member_id, limit=50)
+    
+    # Calculate some stats
+    today_records = [r for r in cico_records if r.timestamp.date() == datetime.now().date()]
+    checkin_count = len([r for r in cico_records if r.event_type == 'checkin'])
+    checkout_count = len([r for r in cico_records if r.event_type == 'checkout'])
+    
+    stats = {
+        'total_checkins': checkin_count,
+        'total_checkouts': checkout_count,
+        'today_events': len(today_records),
+        'last_activity': cico_records[0].formatted_timestamp if cico_records else 'No activity recorded'
+    }
+    
+    return render_template('member_detail.html', 
+                         member=member, 
+                         cico_records=cico_records, 
+                         stats=stats)
+
+
 # API Routes
 @main.route('/api/members')
 def api_members():
@@ -315,6 +341,46 @@ def api_member(member_id):
     """API endpoint to get a specific member."""
     member = Member.query.get_or_404(member_id)
     return jsonify(member.to_dict())
+
+
+@main.route('/api/members/<int:member_id>/cico')
+def api_member_cico(member_id):
+    """API endpoint to get check-in/out records for a specific member."""
+    member = Member.query.get_or_404(member_id)
+    records = CiCo.get_member_records(member_id, limit=50)
+    return jsonify([record.to_dict() for record in records])
+
+
+@main.route('/api/cico/recent')
+def api_recent_cico():
+    """API endpoint to get recent check-in/out records across all members."""
+    records = CiCo.get_recent_records(limit=50)
+    return jsonify([record.to_dict() for record in records])
+
+
+@main.route('/api/members/<int:member_id>/timing-test')
+def api_member_timing_test(member_id):
+    """API endpoint to verify timing synchronization between member and CiCo records."""
+    member = Member.query.get_or_404(member_id)
+    latest_cico = CiCo.query.filter_by(member_id=member_id).order_by(CiCo.timestamp.desc()).first()
+    
+    result = {
+        'member_id': member.id,
+        'member_name': member.full_name,
+        'member_last_updated': member.last_updated.isoformat() if member.last_updated else None,
+        'latest_cico_timestamp': latest_cico.timestamp.isoformat() if latest_cico and latest_cico.timestamp else None,
+        'timestamps_match': False,
+        'timing_difference_ms': None
+    }
+    
+    if member.last_updated and latest_cico and latest_cico.timestamp:
+        # Calculate time difference in milliseconds
+        time_diff = abs((member.last_updated - latest_cico.timestamp).total_seconds() * 1000)
+        result['timing_difference_ms'] = round(time_diff, 2)
+        # Consider timestamps matching if within 10ms (accounting for minimal processing time)
+        result['timestamps_match'] = time_diff < 10
+    
+    return jsonify(result)
 
 
 def init_app(app):

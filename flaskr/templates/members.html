@@ -21,12 +21,18 @@
     </tr>
     {% for member in members %}
     <tr>
-        <td>{{ member.full_name }}</td>
+        <td>
+            <a href="{{ url_for('main.member_detail', member_id=member.id) }}" style="color: #007bff; text-decoration: none; font-weight: bold;">
+                {{ member.full_name }}
+            </a>
+        </td>
         <td style="font-family: monospace; color: #6c757d;">{{ member.idhash }}</td>
         <td>{{ member.position or 'N/A' }}</td>
         <td>{% if member.active %}Active{% else %}Inactive{% endif %}</td>
         <td>{% if member.checked_in %}Checked In{% else %}Not Checked In{% endif %}</td>
         <td>
+            <a href="{{ url_for('main.member_detail', member_id=member.id) }}" style="color: #17a2b8;">View Details</a>
+            |
             {% if member.checked_in %}
                 <a href="{{ url_for('main.checkout_member', member_id=member.id) }}" style="color: #dc3545;">Check Out</a>
             {% else %}
