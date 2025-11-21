@@ -326,6 +326,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Bugs
 
 - Need to fix member delete.  Need to delete entries from cico before removing the use from the members database (Done)
+- Converted member id_hash to use sha256 instead of just an integer.
 
 
 ---

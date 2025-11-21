@@ -62,7 +62,8 @@ def add_member():
                 first_name=first_name,
                 last_name=last_name,
                 idhash=hashed_idhash,
-                position_id=int(position_id)
+                position_id=int(position_id),
+                active=True
             )
             db.session.add(member)
             db.session.commit()
