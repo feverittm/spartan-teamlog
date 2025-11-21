@@ -306,6 +306,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Follows [Flask Tutorial](https://flask.palletsprojects.com/tutorial/) patterns
 - Spartan-themed design for team identity
 
+## Todo
+
+- Add better user creation with ID card registration
+   - add to "member edit" route page and update the 'ID Hash' section.
+   - Make sure format for name is correct Start uppercase, auto index of ID Hash
+   - need to protect member pages using authentication
+   - when 'adding' team make member 'active' by default
+- Create seperate time tracking database to track how long people have been to team meetings
+   - cico database formatting, need reporting page
+   - By date (who can to which meetings)
+   - By user and total time
+   - Need to track team meeting time and outreach time
+- Add correct authentication around entire application
+- Clean up testing
+- Update formatting to be smoother, cleaner
+- Test and Validate deployment
+
+## Bugs
+
+- Need to fix member delete.  Need to delete entries from cico before removing the use from the members database
+
+
 ---
 
 **Spartan Teamlog** - Professional team attendance management made simple. 🏛️

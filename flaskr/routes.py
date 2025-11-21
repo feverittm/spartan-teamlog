@@ -155,7 +155,12 @@ def delete_member(member_id):
     """Delete a member."""
     member = Member.query.get_or_404(member_id)
     member_name = member.full_name
-    
+
+    cico_records = CiCo.query.filter(CiCo.member_id == member_id).all()
+    for cico_record in cico_records:
+        db.session.delete(cico_record)
+    db.session.commit()
+
     db.session.delete(member)
     db.session.commit()
     
