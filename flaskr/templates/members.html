@@ -26,7 +26,7 @@
                 {{ member.full_name }}
             </a>
         </td>
-        <td style="font-family: monospace; color: #6c757d;">{{ member.idhash }}</td>
+        <td style="font-family: monospace; color: #6c757d;">{{ member.idhash[:16] }}...</td>
         <td>{{ member.position or 'N/A' }}</td>
         <td>{% if member.active %}Active{% else %}Inactive{% endif %}</td>
         <td>{% if member.checked_in %}Checked In{% else %}Not Checked In{% endif %}</td>
