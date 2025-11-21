@@ -56,7 +56,7 @@ class TestMember:
             member = Member(
                 first_name='Test',
                 last_name='User',
-                idhash=99999,
+                idhash=Member.hash_id('99999'),
                 position_id=sample_positions['member'].id
             )
             db.session.add(member)

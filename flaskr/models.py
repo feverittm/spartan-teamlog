@@ -1,5 +1,6 @@
 """Database models for Spartan Teamlog."""
 
+import hashlib
 from datetime import datetime, timezone
 from .db import db
 
@@ -47,13 +48,19 @@ class Member(db.Model):
     __tablename__ = 'members'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    idhash = db.Column(db.Integer, nullable=False, unique=True)
+    idhash = db.Column(db.String(64), nullable=False, unique=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     checked_in = db.Column(db.Boolean, default=False, nullable=False)
     last_updated = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    
+    @staticmethod
+    def hash_id(id_value):
+        """Generate SHA256 hash from an ID value (string or integer)."""
+        id_str = str(id_value).strip()
+        return hashlib.sha256(id_str.encode('utf-8')).hexdigest()
     
     def __repr__(self):
         return f'<Member {self.first_name} {self.last_name}>'

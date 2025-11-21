@@ -50,15 +50,18 @@ def add_member():
     position_id = request.form.get('position_id')
     
     if first_name and last_name and idhash and position_id:
+        # Hash the idhash value using SHA256
+        hashed_idhash = Member.hash_id(idhash)
+        
         # Check if idhash already exists
-        existing_member = Member.query.filter_by(idhash=int(idhash)).first()
+        existing_member = Member.query.filter_by(idhash=hashed_idhash).first()
         if existing_member:
             flash(f'ID Hash {idhash} already exists for {existing_member.full_name}', 'error')
         else:
             member = Member(
                 first_name=first_name,
                 last_name=last_name,
-                idhash=int(idhash),
+                idhash=hashed_idhash,
                 position_id=int(position_id)
             )
             db.session.add(member)
@@ -128,15 +131,18 @@ def update_member(member_id):
     active = request.form.get('active') == '1'
     
     if first_name and last_name and idhash and position_id:
+        # Hash the idhash value using SHA256
+        hashed_idhash = Member.hash_id(idhash)
+        
         # Check if idhash already exists for a different member
-        existing_member = Member.query.filter(Member.idhash == int(idhash), Member.id != member_id).first()
+        existing_member = Member.query.filter(Member.idhash == hashed_idhash, Member.id != member_id).first()
         if existing_member:
             flash(f'ID Hash {idhash} already exists for {existing_member.full_name}', 'error')
             return redirect(url_for('main.edit_member', member_id=member_id))
         
         member.first_name = first_name
         member.last_name = last_name
-        member.idhash = int(idhash)
+        member.idhash = hashed_idhash
         member.position_id = int(position_id)
         member.active = active
         member.last_updated = datetime.now(timezone.utc)
@@ -194,25 +200,24 @@ def quick_checkin():
     print(f"Quick checkin input: {member_input}")
     
     if member_input:
-        # Check if input is numeric (potential idhash)
-        if member_input.isdigit():
-            # Search by idhash
-            member = Member.query.filter_by(
-                idhash=int(member_input),
-                active=True
-            ).first()
-            
-            if member:
-                if not member.checked_in:
-                    member.check_in()
-                    print(f"Checked in member by idhash: {member.full_name} ({member.idhash})")
-                else:
-                    print(f"Member already checked in: {member.full_name} ({member.idhash})")
-                return redirect(url_for('main.index'))
+        # Check if input is numeric (potential idhash) or could be an ID to hash
+        # Try to find member by hashing the input
+        hashed_input = Member.hash_id(member_input)
+        member = Member.query.filter_by(
+            idhash=hashed_input,
+            active=True
+        ).first()
+        
+        if member:
+            if not member.checked_in:
+                member.check_in()
+                print(f"Checked in member by idhash: {member.full_name} ({member.idhash})")
             else:
-                print(f"No active member found with idhash: {member_input}")
-                return redirect(url_for('main.index'))
-        else:
+                print(f"Member already checked in: {member.full_name} ({member.idhash})")
+            return redirect(url_for('main.index'))
+        
+        # If not found by hash, try name search
+        if not member_input.isdigit():
             # Search for member by first name, last name, or full name (case insensitive)
             members = Member.query.filter(
                 db.or_(

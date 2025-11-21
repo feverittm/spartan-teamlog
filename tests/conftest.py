@@ -58,7 +58,7 @@ def sample_member(app, sample_positions):
         member = Member(
             first_name='John',
             last_name='Doe',
-            idhash=12345,
+            idhash=Member.hash_id('12345'),
             position_id=sample_positions['member'].id,
             active=True
         )
@@ -76,10 +76,10 @@ def multiple_members(app, sample_positions):
     """Create multiple sample members for testing."""
     with app.app_context():
         members_data = [
-            {'first_name': 'Jane', 'last_name': 'Smith', 'position': 'lead', 'idhash': 67890},
-            {'first_name': 'Bob', 'last_name': 'Wilson', 'position': 'mentor', 'idhash': 11111},
-            {'first_name': 'Alice', 'last_name': 'Johnson', 'position': 'member', 'idhash': 22222},
-            {'first_name': 'Charlie', 'last_name': 'Brown', 'position': 'coach', 'idhash': 33333}
+            {'first_name': 'Jane', 'last_name': 'Smith', 'position': 'lead', 'idhash': '67890'},
+            {'first_name': 'Bob', 'last_name': 'Wilson', 'position': 'mentor', 'idhash': '11111'},
+            {'first_name': 'Alice', 'last_name': 'Johnson', 'position': 'member', 'idhash': '22222'},
+            {'first_name': 'Charlie', 'last_name': 'Brown', 'position': 'coach', 'idhash': '33333'}
         ]
         
         created_members = []
@@ -87,7 +87,7 @@ def multiple_members(app, sample_positions):
             member = Member(
                 first_name=data['first_name'],
                 last_name=data['last_name'],
-                idhash=data['idhash'],
+                idhash=Member.hash_id(data['idhash']),
                 position_id=sample_positions[data['position']].id,
                 active=True
             )

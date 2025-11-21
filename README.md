@@ -313,7 +313,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
    - Make sure format for name is correct Start uppercase, auto index of ID Hash
    - need to protect member pages using authentication
    - when 'adding' team make member 'active' by default
-- Create seperate time tracking database to track how long people have been to team meetings
+   - Create seperate time tracking database to track how long people have been to team meetings (Database done - Cico)
    - cico database formatting, need reporting page
    - By date (who can to which meetings)
    - By user and total time
@@ -325,7 +325,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Bugs
 
-- Need to fix member delete.  Need to delete entries from cico before removing the use from the members database
+- Need to fix member delete.  Need to delete entries from cico before removing the use from the members database (Done)
 
 
 ---

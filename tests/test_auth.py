@@ -186,7 +186,7 @@ class TestAuthenticatedAccess:
         with app.app_context():
             member = Member.query.filter_by(first_name='Auth', last_name='Test').first()
             assert member is not None
-            assert member.idhash == 88888
+            assert member.idhash == Member.hash_id('88888')
 
     def test_authenticated_member_edit(self, logged_in_client, sample_member):
         """Test that authenticated users can edit members."""
@@ -210,7 +210,7 @@ class TestAuthenticatedAccess:
             member = Member.query.get(sample_member)
             assert member.first_name == 'Updated'
             assert member.last_name == 'Name'
-            assert member.idhash == 77777
+            assert member.idhash == Member.hash_id('77777')
 
     def test_authenticated_member_deletion(self, logged_in_client, app, sample_member):
         """Test that authenticated users can delete members."""

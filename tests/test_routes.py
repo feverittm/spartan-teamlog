@@ -235,7 +235,7 @@ class TestMemberCRUD:
         with app.app_context():
             member = Member.query.get(sample_member)
             assert member.first_name == 'Johnny'
-            assert member.idhash == 54321
+            assert member.idhash == Member.hash_id('54321')
             assert member.position_id == sample_positions['lead'].id
     
     def test_update_member_duplicate_idhash(self, client, app, multiple_members):
