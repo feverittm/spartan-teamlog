@@ -16,7 +16,6 @@
         <th>ID Hash</th>
         <th>Position</th>
         <th>Status</th>
-        <th>Attendance</th>
         <th>Actions</th>
     </tr>
     {% for member in members %}
@@ -29,15 +28,8 @@
         <td style="font-family: monospace; color: #6c757d;">{{ member.idhash[:16] }}...</td>
         <td>{{ member.position or 'N/A' }}</td>
         <td>{% if member.active %}Active{% else %}Inactive{% endif %}</td>
-        <td>{% if member.checked_in %}Checked In{% else %}Not Checked In{% endif %}</td>
         <td>
             <a href="{{ url_for('main.member_detail', member_id=member.id) }}" style="color: #17a2b8;">View Details</a>
-            |
-            {% if member.checked_in %}
-                <a href="{{ url_for('main.checkout_member', member_id=member.id) }}" style="color: #dc3545;">Check Out</a>
-            {% else %}
-                <a href="{{ url_for('main.checkin_member', member_id=member.id) }}" style="color: #28a745;">Check In</a>
-            {% endif %}
             |
             {% if member.active %}
                 <a href="{{ url_for('main.deactivate_member', member_id=member.id) }}" style="color: #ffc107;">Deactivate</a>
