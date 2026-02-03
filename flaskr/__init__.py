@@ -1,8 +1,6 @@
 import os
-from datetime import datetime
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 
@@ -33,7 +31,6 @@ def create_app(test_config=None):
     db.init_app(app)
     
     # Initialize Flask-Migrate
-    from flask_migrate import Migrate
     migrate = Migrate(app, db.db)
     
     # Register CLI commands
@@ -43,10 +40,5 @@ def create_app(test_config=None):
     # Register routes
     from . import routes
     routes.init_app(app)
-
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
 
     return app

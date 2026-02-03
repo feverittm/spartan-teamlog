@@ -2,6 +2,7 @@
 
 import click
 from flask.cli import with_appcontext
+
 from .db import db, init_db
 from .models import Member, Position
 

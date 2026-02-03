@@ -1,9 +1,11 @@
 """Routes for the Spartan Teamlog application."""
 
 from datetime import datetime, timezone
+
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash
-from .models import Member, Position, CiCo
+
 from .db import db
+from .models import Member, Position, CiCo
 
 # Create blueprint
 main = Blueprint('main', __name__)
@@ -81,43 +83,6 @@ def edit_member(member_id):
     positions = Position.query.all()
     
     return render_template('edit_member.html', member=member, positions=positions)
-    
-    return f"""
-    <h1>Edit Member: {member.full_name}</h1>
-    <p><a href="/members">← Back to Member Management</a></p>
-    
-    <form method="POST" action="/members/{member.id}/update" style="margin-top: 20px;">
-        <div style="margin-bottom: 10px;">
-            <label>First Name:</label><br>
-            <input type="text" name="first_name" value="{member.first_name}" required style="padding: 5px; margin-right: 10px; width: 200px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label>Last Name:</label><br>
-            <input type="text" name="last_name" value="{member.last_name}" required style="padding: 5px; margin-right: 10px; width: 200px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label>ID Hash:</label><br>
-            <input type="number" name="idhash" value="{member.idhash}" required style="padding: 5px; margin-right: 10px; width: 200px;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label>Position:</label><br>
-            <select name="position_id" required style="padding: 5px; margin-right: 10px; width: 200px;">
-                {''.join([f'<option value="{pos.id}" {"selected" if pos.id == member.position_id else ""}>{pos.name.title()}</option>' for pos in positions])}
-            </select>
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label>Status:</label><br>
-            <select name="active" style="padding: 5px; margin-right: 10px; width: 200px;">
-                <option value="1" {"selected" if member.active else ""}>Active</option>
-                <option value="0" {"selected" if not member.active else ""}>Inactive</option>
-            </select>
-        </div>
-        <div>
-            <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 3px; margin-right: 10px;">Update Member</button>
-            <a href="/members" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px;">Cancel</a>
-        </div>
-    </form>
-    """
 
 
 @main.route('/members/<int:member_id>/update', methods=['POST'])
@@ -198,10 +163,8 @@ def checkout_all_members():
 def quick_checkin():
     """Quick check-in by member name or idhash from titlebar form."""
     member_input = request.form.get('member_name', '').strip()
-    print(f"Quick checkin input: {member_input}")
     
     if member_input:
-        # Check if input is numeric (potential idhash) or could be an ID to hash
         # Try to find member by hashing the input
         hashed_input = Member.hash_id(member_input)
         member = Member.query.filter_by(
@@ -212,9 +175,6 @@ def quick_checkin():
         if member:
             if not member.checked_in:
                 member.check_in()
-                print(f"Checked in member by idhash: {member.full_name} ({member.idhash})")
-            else:
-                print(f"Member already checked in: {member.full_name} ({member.idhash})")
             return redirect(url_for('main.index'))
         
         # If not found by hash, try name search
@@ -230,21 +190,9 @@ def quick_checkin():
             ).all()
             
             if len(members) == 1:
-                # Exact match found - check in the member
                 member = members[0]
                 if not member.checked_in:
                     member.check_in()
-                    print(f"Checked in member by name: {member.full_name} ({member.idhash})")
-                else:
-                    print(f"Member already checked in: {member.full_name} ({member.idhash})")
-                return redirect(url_for('main.index'))
-            elif len(members) > 1:
-                # Multiple matches - redirect to dashboard with error
-                print(f"Multiple members found for name: {member_input}")
-                return redirect(url_for('main.index'))
-            else:
-                # No matches - redirect to dashboard with error
-                print(f"No active member found with name: {member_input}")
                 return redirect(url_for('main.index'))
     
     return redirect(url_for('main.index'))
@@ -290,6 +238,13 @@ def list_positions():
     """List all available positions."""
     positions = Position.query.all()
     
+    position_rows = ''.join([
+        f'<tr><td><strong>{pos.name.title()}</strong></td>'
+        f'<td>{pos.description or "No description"}</td>'
+        f'<td>{len(pos.members)} members</td></tr>'
+        for pos in positions
+    ])
+    
     return f"""
     <h1>Position Management</h1>
     <p><a href="/">← Back to Dashboard</a> | <a href="/members">Manage Members</a></p>
@@ -301,7 +256,7 @@ def list_positions():
             <th>Description</th>
             <th>Member Count</th>
         </tr>
-        {''.join([f'<tr><td><strong>{pos.name.title()}</strong></td><td>{pos.description or "No description"}</td><td>{len(pos.members)} members</td></tr>' for pos in positions])}
+        {position_rows}
     </table>
     """
 
@@ -344,7 +299,15 @@ def api_members():
 def api_positions():
     """API endpoint to get all positions as JSON."""
     positions = Position.query.all()
-    return jsonify([{'id': p.id, 'name': p.name, 'description': p.description, 'member_count': len(p.members)} for p in positions])
+    return jsonify([
+        {
+            'id': p.id,
+            'name': p.name,
+            'description': p.description,
+            'member_count': len(p.members)
+        }
+        for p in positions
+    ])
 
 
 @main.route('/api/members/<int:member_id>')

@@ -1,7 +1,9 @@
 """Migration script to convert idhash from Integer to SHA256 hash."""
 
 import hashlib
+
 from flask import Flask
+
 from .db import db
 from .models import Member
 

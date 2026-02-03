@@ -4,6 +4,7 @@ Provides simple username/password authentication with session management.
 """
 
 from functools import wraps
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from werkzeug.security import check_password_hash
 

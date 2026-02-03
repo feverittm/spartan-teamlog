@@ -2,6 +2,7 @@
 
 import hashlib
 from datetime import datetime, timezone
+
 from .db import db
 
 
@@ -224,9 +225,3 @@ class CiCo(db.Model):
             'formatted_timestamp': self.formatted_timestamp,
             'notes': self.notes
         }
-
-
-# CiCo records are now created directly in Member.check_in() and Member.check_out() methods
-# This ensures consistent timestamps and atomic database transactions
-
-        
